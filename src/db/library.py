@@ -21,13 +21,8 @@ class Track:
         self.album = album
         self.artist = artist
         self.folder = folder
-        #self.title = unicode(title, 'utf-8')
-        #self.album = unicode(album, 'utf-8')
-        #self.artist = unicode(artist, 'utf-8')
-        #self.folder = unicode(folder, 'utf-8')
+        # TODO: should probably use ':::' instead of double colon
         cola = u'::'
-        #colon = colon.encode('utf-8')
-        #self.key = cola.join([self.title, self.album, self.artist])
         self.key = cola.join([self.title, self.album, self.artist, self.folder])
         self.data = {'duration' : duration, 'plays' : plays,  'scrobbles' : scrobbles}
 
@@ -76,6 +71,7 @@ class Redis:
         self.r.set(track.key, track.stats())
 
     def lookup(self, keyword):
+        # TODO: add option to search case-less
         return self.r.keys('*' + keyword + '*')
 
     def retrieve(self, key):
@@ -89,7 +85,7 @@ class Crawler:
     def crawl(self, path):
         for(dirpath, dirnames, filenames) in os.walk(path):
             for filename in filenames:
-                print filename
+                #print filename
                 if filename[-3:] in extensions:
                     self.r.update(Track.
                                     from_arguments(

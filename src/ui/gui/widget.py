@@ -44,14 +44,23 @@ class ImusWidget(QWidget):
         self.setLayout(self.layout)
 
     def init_composition(self):
-        pass
+        #self.setWindowTitle(NAME + ' ' + __version__)
+        desktop = QApplication.desktop()
+        WIDTH = 800
+        HEIGHT = 600
+        self.setGeometry((desktop.width() - WIDTH)/2,
+                        (desktop.height() - HEIGHT)/2, WIDTH, HEIGHT)
 
     def init_contents(self):
         self.directory.setPlaceholderText('Folder to scan')
         self.search.setPlaceholderText('Key to search')
+        self.info.setMaximumWidth(640)
+        self.info.setMaximumHeight(480)
+        self.info.setAlignment(Qt.AlignCenter)
 
     def init_actions(self):
         self.scan.clicked.connect(self.update_lib)
+        self.search.textChanged.connect(self.lookup_variants)
 
     def on_start(self):
         self.r = Redis()
@@ -61,6 +70,22 @@ class ImusWidget(QWidget):
 
     def update_lib(self):
         if not self.directory.text().isEmpty():
-            # TODO: str -> unicode
             self.crawler.crawl(unicode(self.directory.text()))
         self.info.setText('Redis keys: %d' % len(self.r.lookup('*')))
+
+    def lookup_variants(self):
+        #TODO: should not lookup queries under 2 symbols (in case those aren't kanji/hanzi)
+        if not self.search.text().isEmpty():
+            #TODO: implement option to search case-independent (e.g., convert to small case)
+            found = self.r.lookup(self.search.text())
+            if found:
+                self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
+            else:
+                self.info.setText('Nothing matches')
+                #self.adjustSize()
+            self.adjustSize()
+
+    ##### events #####
+
+    def onResizeEvent(self, event):
+        pass
