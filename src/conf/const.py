@@ -1,4 +1,8 @@
 # -*- coding=utf-8 -*-
 
 name = 'imus'
-packages = ['redis', 'hiredis', 'hsaudiotag']
+version = '0.1'
+developer = 'Artiom Basenko'
+info = 'Scrobble that scrobbles.'
+# TODO:  Testing in progress, should select one of the hsaudio/mutagen libraries
+packages = ['redis', 'hiredis', 'hsaudiotag', 'mutagen']

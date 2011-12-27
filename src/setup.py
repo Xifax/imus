@@ -17,8 +17,8 @@ def setup_all():
 def info():
     if raw_input("Good day! If you've run this without administrative privileges, please, reconsider.\n\
 This script will now set up all necessary packages \
-and resources to succesfully launch '%s' (at least it will try to) [y/n]: " % name) \
-                != ('y' or 'Y'):
+and resources to succesfully launch '%s' (at least it will try to) [Y/n]: " % name) \
+        == ('n' or 'N'):
         print 'Oh, well, goodbye then.'
         sys.exit(0)
 

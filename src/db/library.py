@@ -9,14 +9,17 @@ class Track:
     def __init__(self, title='',
                        album='',
                        artist='',
-                       folder=''):
+                       folder='',
+                       duration=0,
+                       plays=0,
+                       scrobbles=0):
         self.title = title
         self.album = album
         self.artist = artist
         self.folder = folder
         colon = ':'
         self.key = colon.join([self.title, self.album, self.artist, self.folder])
-        self.data = {}
+        self.data = {'duration' : duration, 'plays' : plays,  'scrobbles' : scrobbles}
 
     def stats(self):
         return json.dumps(self.data)
@@ -34,7 +37,6 @@ class Track:
     @staticmethod
     def from_redis(key, value):
         if key is not None:
-            #track = Track(key.split(':'))
             track = Track.arguments(key.split(':'))
             track.update_stats(value)
             return track
@@ -42,11 +44,7 @@ class Track:
     @staticmethod
     def arguments(*args):
         for arg in args:
-            title = arg.pop(0)
-            album = arg.pop(0)
-            artist = arg.pop(0)
-            folder = arg.pop(0)
-            return Track(title, album, artist, folder)
+            return Track(arg.pop(0), arg.pop(0), arg.pop(0), arg.pop(0))
 
 class Redis:
 
@@ -64,3 +62,11 @@ class Redis:
 
     def retrieve(self, key):
         return Track.from_redis(key, self.r.get(key))
+
+class Crawler:
+
+    def __init__(self):
+        pass
+
+    def crawl(self, folder):
+        pass
