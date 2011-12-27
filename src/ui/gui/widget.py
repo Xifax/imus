@@ -1,12 +1,14 @@
 # -*- coding=utf-8 -*-
 
+# TODO: calculate/display time that search took
+
 # external #
 from PyQt4.QtGui import QWidget, QGridLayout, \
                         QGroupBox, QLabel, QPushButton, QApplication, QFont, \
                         QComboBox, QProgressBar, QToolTip, QMessageBox, QPixmap, \
                         QLineEdit
 
-from PyQt4.QtCore import Qt, QObject, QEvent, QTimer, QThread, pyqtSignal, QSize
+from PyQt4.QtCore import Qt, QObject, QEvent, QTimer, QThread, pyqtSignal, QSize, QPoint
 
 # own #
 #from conf.const import *
@@ -34,12 +36,14 @@ class ImusWidget(QWidget):
         self.info = QLabel('Nothing to info about')
 
         self.scan = QPushButton('&Scan')
+        self.leave = QPushButton('&Quit')
 
     def compose_ui(self):
         self.layout.addWidget(self.directory, 0, 0)
         self.layout.addWidget(self.search, 1, 0)
         self.layout.addWidget(self.info, 2, 0)
         self.layout.addWidget(self.scan, 3, 0)
+        self.layout.addWidget(self.leave, 3, 1)
 
         self.setLayout(self.layout)
 
@@ -50,6 +54,7 @@ class ImusWidget(QWidget):
         HEIGHT = 600
         self.setGeometry((desktop.width() - WIDTH)/2,
                         (desktop.height() - HEIGHT)/2, WIDTH, HEIGHT)
+        self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
 
     def init_contents(self):
         self.directory.setPlaceholderText('Folder to scan')
@@ -60,11 +65,13 @@ class ImusWidget(QWidget):
 
     def init_actions(self):
         self.scan.clicked.connect(self.update_lib)
+        self.leave.clicked.connect(self.close)
         self.search.textChanged.connect(self.lookup_variants)
 
     def on_start(self):
         self.r = Redis()
         self.crawler = Crawler(self.r)
+        self.mpost = QPoint()
 
     ##### actions #####
 
@@ -89,3 +96,13 @@ class ImusWidget(QWidget):
 
     def onResizeEvent(self, event):
         pass
+
+    def mousePressEvent(self, event):
+        self.mpos = event.pos()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            diff = QPoint(event.pos() - self.mpos)
+            newpos = QPoint(self.pos() + diff)
+
+            self.move(newpos)
