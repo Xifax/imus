@@ -1,19 +1,26 @@
 # -*- coding=utf-8 -*-
 
-import os
-
 from hsaudiotag import auto
 
-from db.library import Track
+#from db.library import Track
 
 def track_info(path):
-    if os.path.exists(path):
+    print path
+    try:
         track = auto.File(path)
-        return Track(track.title,
+        return [track.title,
                      track.album,
                      track.artist,
-                     path.split('/')[-1],
-                     track.duration)
+                     #path.split('/')[:-1],
+                     path,
+                     track.duration]
+        #return Track(track.title,
+                     #track.album,
+                     #track.artist,
+                     #path.split('/')[-1],
+                     #track.duration)
+    except IOError:
+        pass
 
 def track_info_mutha(path):
     pass

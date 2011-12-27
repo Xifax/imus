@@ -1,8 +1,12 @@
 # -*- coding=utf-8 -*-
 
+import os
 import json
 
 from redis import StrictRedis
+
+from conf.const import extensions
+from media.tags import track_info
 
 class Track:
 
@@ -17,8 +21,14 @@ class Track:
         self.album = album
         self.artist = artist
         self.folder = folder
-        colon = ':'
-        self.key = colon.join([self.title, self.album, self.artist, self.folder])
+        #self.title = unicode(title, 'utf-8')
+        #self.album = unicode(album, 'utf-8')
+        #self.artist = unicode(artist, 'utf-8')
+        #self.folder = unicode(folder, 'utf-8')
+        cola = u'::'
+        #colon = colon.encode('utf-8')
+        #self.key = cola.join([self.title, self.album, self.artist])
+        self.key = cola.join([self.title, self.album, self.artist, self.folder])
         self.data = {'duration' : duration, 'plays' : plays,  'scrobbles' : scrobbles}
 
     def stats(self):
@@ -31,20 +41,28 @@ class Track:
             pass
 
     def __repr__(self):
-        return "Title: %s | artist: %s | album: %s | location: %s" \
+        return u"Title: %s | artist: %s | album: %s | location: %s" \
                 % (self.title, self.artist, self.album, self.folder)
 
     @staticmethod
     def from_redis(key, value):
         if key is not None:
-            track = Track.arguments(key.split(':'))
+            track = Track.from_arguments(key.split('::'))
             track.update_stats(value)
             return track
 
     @staticmethod
-    def arguments(*args):
+    def from_arguments(*args):
         for arg in args:
-            return Track(arg.pop(0), arg.pop(0), arg.pop(0), arg.pop(0))
+            return Track(title=arg.pop(0),
+                         album=arg.pop(0),
+                         artist=arg.pop(0),
+                         folder=arg.pop(0))
+
+                         # TODO: fix this
+                         #duration=arg.pop(0),
+                         #plays=arg.pop(0),
+                         #scrobbles=arg.pop(0))
 
 class Redis:
 
@@ -65,8 +83,14 @@ class Redis:
 
 class Crawler:
 
-    def __init__(self):
-        pass
+    def __init__(self, redis=None):
+        self.r = Redis() if redis is None else redis
 
-    def crawl(self, folder):
-        pass
+    def crawl(self, path):
+        for(dirpath, dirnames, filenames) in os.walk(path):
+            for filename in filenames:
+                print filename
+                if filename[-3:] in extensions:
+                    self.r.update(Track.
+                                    from_arguments(
+                                        track_info(os.path.join(dirpath, filename))))
