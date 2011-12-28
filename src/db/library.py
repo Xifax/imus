@@ -9,6 +9,10 @@ from conf.const import extensions
 from media.tags import track_info
 
 class Track:
+    """
+    To represent audio-track abstraction.
+    May be stored in Redis (crude keys/namespaces!).
+    """
 
     def __init__(self, title='',
                        album='',
@@ -23,6 +27,7 @@ class Track:
         self.folder = folder
         # TODO: should probably use ':::' instead of double colon
         cola = u'::'
+        # TODO: fix unicode/ascii error on join()
         self.key = cola.join([self.title, self.album, self.artist, self.folder])
         self.data = {'duration' : duration, 'plays' : plays,  'scrobbles' : scrobbles}
 
@@ -35,9 +40,14 @@ class Track:
         except ValueError:
             pass
 
+    # TODO: UNICODE SHENANINGANS, VERY NO
     def __repr__(self):
         return u"Title: %s | artist: %s | album: %s | location: %s" \
                 % (self.title, self.artist, self.album, self.folder)
+
+    def info(self):
+        return u"%s ( %s ) : %s" \
+                % (self.artist, self.album, self.title)
 
     @staticmethod
     def from_redis(key, value):
@@ -60,6 +70,9 @@ class Track:
                          #scrobbles=arg.pop(0))
 
 class Redis:
+    """
+    To store and query local/remote Redis server.
+    """
 
     def __init__(self, host='localhost',
                        port=6379,
@@ -74,13 +87,24 @@ class Redis:
         self.r.set(track.key, track.stats())
 
     def lookup(self, keyword):
-        # TODO: add option to search case-less
+        # TODO: add option for caseless search
         return self.r.keys('*' + keyword + '*')
 
     def retrieve(self, key):
+        if isinstance(key, list):
+            return self.get_all(key)
         return Track.from_redis(key, self.r.get(key))
 
+    def get_all(self, keys):
+        tracks = []
+        for key in keys:
+            tracks.append(Track.from_redis(key, self.r.get(key)))
+        return tracks
+
 class Crawler:
+    """
+    To crawl on specified folders and yield metadata from media files.
+    """
 
     def __init__(self, redis=None):
         self.r = Redis() if redis is None else redis

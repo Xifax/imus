@@ -1,8 +1,9 @@
 # -*- coding=utf-8 -*-
 
-# TODO: calculate/display time that search took
+# TODO: display benchmarked time, that search took
 
 # std #
+import sys
 from time import time
 
 # external #
@@ -15,7 +16,7 @@ from PyQt4.QtCore import Qt, QObject, QEvent, QTimer, QThread, pyqtSignal, QSize
 
 # own #
 #from conf.const import *
-from db.library import Redis, Crawler
+from db.library import Track, Redis, Crawler
 
 class ImusWidget(QWidget):
 
@@ -42,9 +43,9 @@ class ImusWidget(QWidget):
         self.leave = QPushButton('&Quit')
 
     def compose_ui(self):
-        self.layout.addWidget(self.directory, 0, 0)
-        self.layout.addWidget(self.search, 1, 0)
-        self.layout.addWidget(self.info, 2, 0)
+        self.layout.addWidget(self.directory, 0, 0, 1, 2)
+        self.layout.addWidget(self.search, 1, 0, 1, 2)
+        self.layout.addWidget(self.info, 2, 0, 1, 2)
         self.layout.addWidget(self.scan, 3, 0)
         self.layout.addWidget(self.leave, 3, 1)
 
@@ -118,7 +119,14 @@ class ImusWidget(QWidget):
 
     def lookup_results(self, found):
         if found:
-            self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
+            text = ''
+            for track in self.r.retrieve(found):
+                text += track.info()
+                text += '<hr/>'
+
+            self.info.setText(unicode(text, 'utf-8'))
+            # TEST: getting from Redis
+            #self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
         else:
             self.info.setText('Nothing matches')
         self.adjustSize()
@@ -142,6 +150,10 @@ class ImusWidget(QWidget):
 
             self.move(newpos)
 
+    def close(self, event):
+        # TODO: implement 'minimize to tray' and all that stuff
+        sys.exit()
+
 class Lookup(QThread):
 
     done = pyqtSignal(list)
@@ -154,7 +166,6 @@ class Lookup(QThread):
         self.found = []
 
     def run(self):
-        #todo: calculate time to perform lookup
         began = time()
         #print 'start!'
         try:
