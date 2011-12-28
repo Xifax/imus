@@ -67,6 +67,9 @@ class Redis:
                        password=None):
         self.r = StrictRedis(host, port, db, password)
 
+    def __del__(self):
+        del(self.r)
+
     def update(self, track):
         self.r.set(track.key, track.stats())
 

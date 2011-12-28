@@ -2,6 +2,9 @@
 
 # TODO: calculate/display time that search took
 
+# std #
+from time import time
+
 # external #
 from PyQt4.QtGui import QWidget, QGridLayout, \
                         QGroupBox, QLabel, QPushButton, QApplication, QFont, \
@@ -72,6 +75,7 @@ class ImusWidget(QWidget):
         self.r = Redis()
         self.crawler = Crawler(self.r)
         self.mpost = QPoint()
+        self.lookup_task = None
 
     ##### actions #####
 
@@ -81,16 +85,47 @@ class ImusWidget(QWidget):
         self.info.setText('Redis keys: %d' % len(self.r.lookup('*')))
 
     def lookup_variants(self):
-        #TODO: should not lookup queries under 2 symbols (in case those aren't kanji/hanzi)
-        if not self.search.text().isEmpty():
-            #TODO: implement option to search case-independent (e.g., convert to small case)
-            found = self.r.lookup(self.search.text())
-            if found:
-                self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
+        ##TODO: should not lookup queries under 2 symbols (in case those aren't kanji/hanzi)
+        # Temporarily! May not work properly in many-many cases
+        #if not self.search.text().isEmpty():
+        if len(self.search.text()) > 1:
+            # If lookut thread already initialized
+            if self.lookup_task is not None:
+                # If not finished yet - stop
+                if not self.lookup_task.isFinished():
+                    #print 'not finished!'
+                    self.lookup_task.quit()
+                # Update search query and restart
+                self.lookup_task.update(self.search.text())
+                self.lookup_task.start()
+            # If not - let's create it and bind signals
             else:
-                self.info.setText('Nothing matches')
-                #self.adjustSize()
-            self.adjustSize()
+                self.lookup_task = Lookup(self.r, self.search.text())
+                self.lookup_task.done.connect(self.lookup_results)
+                self.lookup_task.benchmark.connect(self.lookup_time)
+                self.lookup_task.start()
+
+        ##TODO: should not lookup queries under 2 symbols (in case those aren't kanji/hanzi)
+        #if not self.search.text().isEmpty():
+            ##TODO: implement option to search case-independent (e.g., convert to small case)
+            #found = self.r.lookup(self.search.text())
+            #if found:
+                #self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
+            #else:
+                #self.info.setText('Nothing matches')
+                ##self.adjustSize()
+            #self.adjustSize()
+
+    def lookup_results(self, found):
+        if found:
+            self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
+        else:
+            self.info.setText('Nothing matches')
+        self.adjustSize()
+
+    def lookup_time(self, measured):
+        # TODO ...
+        print measured
 
     ##### events #####
 
@@ -106,3 +141,31 @@ class ImusWidget(QWidget):
             newpos = QPoint(self.pos() + diff)
 
             self.move(newpos)
+
+class Lookup(QThread):
+
+    done = pyqtSignal(list)
+    benchmark = pyqtSignal(float)
+
+    def __init__(self, redis, text, parent=None):
+        super(Lookup, self).__init__(parent)
+        self.text = text
+        self.r = redis
+        self.found = []
+
+    def run(self):
+        #todo: calculate time to perform lookup
+        began = time()
+        #print 'start!'
+        try:
+            self.found = self.r.lookup(self.text)
+            took_time = time() - began
+            self.benchmark.emit(took_time)
+        except Exception:
+            pass
+
+        self.done.emit(self.found)
+
+    def update(self, text):
+        self.text = text
+        self.found = []
