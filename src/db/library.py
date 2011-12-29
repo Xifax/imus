@@ -27,8 +27,15 @@ class Track:
         self.folder = folder
         # TODO: should probably use ':::' instead of double colon
         cola = u'::'
-        # TODO: fix unicode/ascii error on join()
-        self.key = cola.join([self.title, self.album, self.artist, self.folder])
+        #try:
+        self.key = cola.join([self.title.decode('utf-8'),
+                            self.album.decode('utf-8'),
+                            self.artist.decode('utf-8'),
+                            self.folder.decode('utf-8'),
+                            ])
+        #except Exception:
+            #self.key = cola.join([self.title, self.album, self.artist, self.folder])
+
         self.data = {'duration' : duration, 'plays' : plays,  'scrobbles' : scrobbles}
 
     def stats(self):
@@ -40,14 +47,24 @@ class Track:
         except ValueError:
             pass
 
-    # TODO: UNICODE SHENANINGANS, VERY NO
     def __repr__(self):
         return u"Title: %s | artist: %s | album: %s | location: %s" \
-                % (self.title, self.artist, self.album, self.folder)
+                % (self.title.decode('utf-8'),
+                   self.artist.decode('utf-8'),
+                   self.album.decode('utf-8'),
+                   self.folder.decode('utf-8'))
 
     def info(self):
+        #try:
         return u"%s ( %s ) : %s" \
-                % (self.artist, self.album, self.title)
+                % (self.artist.decode('utf-8'),
+                   self.album.decode('utf-8'),
+                   self.title.decode('utf-8'))
+        #except Exception:
+            #return u"%s ( %s ) : %s" \
+                #% (self.artist, self.album, self.title)
+
+                #% (self.artist, self.album, self.title)
 
     @staticmethod
     def from_redis(key, value):

@@ -1,6 +1,8 @@
 # -*- coding=utf-8 -*-
 
 # TODO: display benchmarked time, that search took
+# TODO: group results, hide/mark empty results
+# TODO: hotkeys for search field
 
 # std #
 import sys
@@ -124,7 +126,10 @@ class ImusWidget(QWidget):
                 text += track.info()
                 text += '<hr/>'
 
-            self.info.setText(unicode(text, 'utf-8'))
+            try:
+                self.info.setText(unicode(text, 'utf-8'))
+            except TypeError:
+                self.info.setText(text)
             # TEST: getting from Redis
             #self.info.setText(unicode('<hr/>'.join(found), 'utf-8'))
         else:
