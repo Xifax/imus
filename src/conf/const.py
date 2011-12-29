@@ -7,7 +7,7 @@ info = 'Scrobbler that scrobbles.'
 
 # TODO:  Testing in progress, should select one of the hsaudio/mutagen libraries
 # TODO: ... the same goes for agrh/argparse, I guess
-packages = ['redis', 'hiredis', 'hsaudiotag', 'mutagen', 'argparse', 'argh']
+packages = ['redis', 'hiredis', 'hsaudiotag', 'mutagen', 'argparse', 'argh', 'pylast']
 extensions = ['mp3', 'flac', 'mp4', 'mped', 'ogg', 'aiff']
 
 API_KEY = "0cacd3c709ef73d915ccea46dd8afda8"

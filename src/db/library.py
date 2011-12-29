@@ -2,6 +2,7 @@
 
 import os
 import json
+from collections import defaultdict
 
 from redis import StrictRedis
 
@@ -85,6 +86,31 @@ class Track:
                          #duration=arg.pop(0),
                          #plays=arg.pop(0),
                          #scrobbles=arg.pop(0))
+
+    @staticmethod
+    def structure(tracks):
+        """
+        Should structure list of tracks as:
+            { folder : { artist_A : { ablum_A : { track_A,
+                                                  track_B,
+                                                 ... },
+                                      album_B : { ... },
+                                      ...  },
+                         artist_B : { ... },
+                        ... },
+            }
+        """
+        # Let's start with artists (folders should be left for better times)
+        artists = defaultdict(list)
+        for track in tracks:
+            # Composing list of similar artists
+            # TODO: impelement filter function to get tracks list OR use lists comprehension
+            artists[track.title].append(
+                                    {track.album :
+                                        [t.title for t in tracks if t.album == track.album]
+                                    })
+        return artists
+
 
 class Redis:
     """

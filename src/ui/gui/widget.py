@@ -3,6 +3,7 @@
 # TODO: display benchmarked time, that search took
 # TODO: group results, hide/mark empty results
 # TODO: hotkeys for search field
+# TODO: implement something like table with groups, instead of single qlabel
 
 # std #
 import sys
@@ -12,7 +13,7 @@ from time import time
 from PyQt4.QtGui import QWidget, QGridLayout, \
                         QGroupBox, QLabel, QPushButton, QApplication, QFont, \
                         QComboBox, QProgressBar, QToolTip, QMessageBox, QPixmap, \
-                        QLineEdit
+                        QLineEdit, QTableWidget
 
 from PyQt4.QtCore import Qt, QObject, QEvent, QTimer, QThread, pyqtSignal, QSize, QPoint
 
@@ -40,6 +41,9 @@ class ImusWidget(QWidget):
         self.directory = QLineEdit()
         self.search = QLineEdit()
         self.info = QLabel('Nothing to info about')
+        self.bench = QLabel('0.0')
+
+        self.results = QTableWidget()
 
         self.scan = QPushButton('&Scan')
         self.leave = QPushButton('&Quit')
@@ -50,6 +54,7 @@ class ImusWidget(QWidget):
         self.layout.addWidget(self.info, 2, 0, 1, 2)
         self.layout.addWidget(self.scan, 3, 0)
         self.layout.addWidget(self.leave, 3, 1)
+        self.layout.addWidget(self.bench, 4, 0, 1, 2)
 
         self.setLayout(self.layout)
 
@@ -75,6 +80,9 @@ class ImusWidget(QWidget):
         self.search.textChanged.connect(self.lookup_variants)
 
     def on_start(self):
+        """
+        Post-launch initialization.
+        """
         self.r = Redis()
         self.crawler = Crawler(self.r)
         self.mpost = QPoint()
@@ -90,8 +98,8 @@ class ImusWidget(QWidget):
     def lookup_variants(self):
         ##TODO: should not lookup queries under 2 symbols (in case those aren't kanji/hanzi)
         # Temporarily! May not work properly in many-many cases
-        #if not self.search.text().isEmpty():
-        if len(self.search.text()) > 1:
+        if not self.search.text().isEmpty():
+        #if len(self.search.text()) > 1:
             # If lookut thread already initialized
             if self.lookup_task is not None:
                 # If not finished yet - stop
@@ -121,6 +129,7 @@ class ImusWidget(QWidget):
 
     def lookup_results(self, found):
         if found:
+            print Track.structure(self.r.retrieve(found))
             text = ''
             for track in self.r.retrieve(found):
                 text += track.info()
@@ -137,8 +146,8 @@ class ImusWidget(QWidget):
         self.adjustSize()
 
     def lookup_time(self, measured):
-        # TODO ...
-        print measured
+        #print measured
+        self.bench.setText(str(measured))
 
     ##### events #####
 
@@ -172,11 +181,9 @@ class Lookup(QThread):
 
     def run(self):
         began = time()
-        #print 'start!'
         try:
             self.found = self.r.lookup(self.text)
-            took_time = time() - began
-            self.benchmark.emit(took_time)
+            self.benchmark.emit(time() - began)
         except Exception:
             pass
 
