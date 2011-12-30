@@ -101,14 +101,19 @@ class Track:
             }
         """
         # Let's start with artists (folders should be left for better times)
-        artists = defaultdict(list)
+        artists = defaultdict(dict)
         for track in tracks:
             # Composing list of similar artists
-            # TODO: impelement filter function to get tracks list OR use lists comprehension
-            artists[track.title].append(
-                                    {track.album :
-                                        [t.title for t in tracks if t.album == track.album]
-                                    })
+            if track.album not in artists[track.artist]:
+                artists[track.artist] = {track.album : []}
+                #artists[track.artist].append({track.album : []})
+                                    #{track.album :# track.title
+                                        ##[t.title for t in tracks if t.album == track.album]
+                                    #})
+            # Fill album (if exists) for curre
+            if track.album in artists[track.artist]:
+                artists[track.artist][track.album].append(track.title)
+
         return artists
 
 
